@@ -22,6 +22,7 @@ fn vertex_main(in: VertexIn) -> VertexOut {
 struct View {
     offset: vec2<f32>,
     scale: f32,
+    aspect_ratio: f32,
 }
 
 @group(0) @binding(0)
@@ -43,7 +44,7 @@ fn mandelbrot(c: vec2<f32>) -> i32 {
     }
 
     if count == 256 { return 0; }
-    return count - 1;
+    return count;
 }
 
 fn color(iterations: i32) -> vec4<f32> {
@@ -53,7 +54,8 @@ fn color(iterations: i32) -> vec4<f32> {
 
 @fragment
 fn fragment_main(in: VertexOut) -> @location(0) vec4<f32> {
-    let iterations = mandelbrot((in.position.xy / view.scale) + view.offset);
+    let position = (in.position.xy / view.scale) + view.offset;
+    let iterations = mandelbrot(position);
     if iterations == 0 {
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
     }

@@ -29,8 +29,8 @@ fn run_loop(mut state: State, event_loop: EventLoop<()>, window: Window) -> Resu
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent { event, .. } if !state.input(&event) => match event {
             WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-            WindowEvent::Resized(new_size) => state.resize(new_size),
-            WindowEvent::ScaleFactorChanged { new_inner_size, .. } => state.resize(*new_inner_size),
+            WindowEvent::Resized(new_size) => state.resize(&new_size),
+            WindowEvent::ScaleFactorChanged { new_inner_size, .. } => state.resize(new_inner_size),
             _ => {}
         },
 
@@ -39,7 +39,6 @@ fn run_loop(mut state: State, event_loop: EventLoop<()>, window: Window) -> Resu
             state.update();
             match state.render() {
                 Ok(_) => {}
-                Err(wgpu::SurfaceError::Lost) => state.resize(state.size),
                 Err(wgpu::SurfaceError::OutOfMemory) => *control_flow = ControlFlow::Exit,
                 Err(_) => {}
             }

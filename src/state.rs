@@ -17,7 +17,6 @@ pub struct State {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,
 
-    view: View,
     view_controller: ViewController,
     view_buffer: wgpu::Buffer,
     view_bind_group: wgpu::BindGroup,
@@ -48,10 +47,10 @@ impl State {
         surface.configure(&device, &config);
 
         // view data to be sent to the gpu
-        let (view, view_controller) = View::new();
+        let (_, view_controller) = View::new();
         let view_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("view buffer"),
-            contents: bytemuck::cast_slice(&[view]),
+            contents: bytemuck::cast_slice(&[view_controller.view]),
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
 
@@ -137,30 +136,31 @@ impl State {
             vertex_buffer,
             index_buffer,
 
-            view,
             view_controller,
             view_buffer,
             view_bind_group,
         })
     }
 
-    pub fn resize(&mut self, new_size: PhysicalSize<u32>) {
+    pub fn resize(&mut self, new_size: &PhysicalSize<u32>) {
         // TODO: change aspect ratio of view
         if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size;
+            self.size = *new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
+
+            self.view_controller.resize(new_size);
         }
     }
 
     pub fn input(&mut self, event: &winit::event::WindowEvent) -> bool {
-        self.view_controller.input(event, &mut self.view)
+        self.view_controller.input(event)
     }
 
     pub fn update(&mut self) {
         self.queue
-            .write_buffer(&self.view_buffer, 0, bytemuck::cast_slice(&[self.view]))
+            .write_buffer(&self.view_buffer, 0, bytemuck::cast_slice(&[self.view_controller.view]))
     }
 
     pub fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
